@@ -10,6 +10,7 @@ namespace ComicBookShared.Data
 {
     public class SeriesRepository : BaseRepository<Series>
     {
+        const string SeriesListkey = "SeriesList";
         public SeriesRepository(Context context) 
             : base(context)
         {
@@ -32,11 +33,36 @@ namespace ComicBookShared.Data
 
         public override IList<Series> GetList()
         {
-            return Context.Series
-                .OrderBy(s => s.Title)
-                .ToList();
-        }
+            var seriesList = EntityCache.Get<List<Series>>(SeriesListkey);
+            if (seriesList==null)
+            {
+                seriesList = Context.Series
+                    .OrderBy(s => s.Title)
+                    .ToList();
+                EntityCache.Add(SeriesListkey, seriesList);
+            }
 
+            return seriesList;
+
+            //return Context.Series
+            //    .OrderBy(s => s.Title)
+            //    .ToList();
+        }
+        public override void Update(Series entity)
+        {
+            base.Update(entity);
+            EntityCache.remove(SeriesListkey);
+        }
+        public override void Add(Series entity)
+        {
+            base.Add(entity);
+            EntityCache.remove(SeriesListkey);
+        }
+        public override void Delete(int id)
+        {
+            base.Delete(id);
+            EntityCache.remove(SeriesListkey);
+        }
         public bool SeriesHasTitle(int seriesId, string title)
         {
             return Context.Series
