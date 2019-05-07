@@ -26,19 +26,42 @@ namespace ComicBookShared.Data
 
         public override ComicBook Get(int id, bool includeRelatedEntities = true)
         {
-            var comicBooks = Context.ComicBooks.AsQueryable();
-
-            if (includeRelatedEntities)
-            {
-                comicBooks = comicBooks
-                    .Include(cb => cb.Series)
-                    .Include(cb => cb.Artists.Select(a => a.Artist))
-                    .Include(cb => cb.Artists.Select(a => a.Role));
-            }
-
-            return comicBooks
+            var comicBook = Context.ComicBooks
                 .Where(cb => cb.Id == id)
                 .SingleOrDefault();
+            if (includeRelatedEntities)
+            {
+                Context.Series
+                    .Where(s => s.Id == comicBook.SeriesId).Single();
+                Context.ComicBookArtists
+                    .Include(cba => cba.Artist)
+                    .Include(cba => cba.Role)
+                    .Where(cba => cba.ComicBookId == id)
+                    .ToList();
+                //var comicBookEntry = Context.Entry(comicBook);
+                //comicBookEntry.Reference(cb => cb.Series).Load();
+                //comicBookEntry.Collection(cb => cb.Artists)
+                //    .Query()
+                //    .Include(a => a.Artist)
+                //    .Include(r => r.Role)
+                //    .ToList();
+            }
+            return comicBook;
+
+
+            //var comicBooks = Context.ComicBooks.AsQueryable();
+
+            //if (includeRelatedEntities)
+            //{
+            //    comicBooks = comicBooks
+            //        .Include(cb => cb.Series)
+            //        .Include(cb => cb.Artists.Select(a => a.Artist))
+            //        .Include(cb => cb.Artists.Select(a => a.Role));
+            //}
+
+            //return comicBooks
+            //    .Where(cb => cb.Id == id)
+            //    .SingleOrDefault();
         }
 
         public bool ComicBookSeriesHasIssueNumber(
